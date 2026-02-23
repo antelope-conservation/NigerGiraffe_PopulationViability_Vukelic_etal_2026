@@ -1,0 +1,170 @@
+---
+title: "Temp_GZ"
+author: "Mara Vukelić"
+date: "2025-06-09"
+output: html_document
+---
+
+#Doing multistate CMR analysis to see the effect of temperature on survival of West African giraffe population in the Giraffe Zone, Niger, 2005 - 2019
+#Data for 2005-2018 are from 'ECMWF/ERA5/DAILY'
+
+
+
+
+```{r}
+
+rm(list = ls())
+
+```
+
+
+Loading libraries and encounter histories data
+```{r}
+
+library(tidyverse)
+library(RMark)
+library(here)
+
+
+eh <- read.csv('./data/WA_giraffe_encounter_histories.csv', sep = ";", 
+               colClasses = c("character", "character"))
+
+```
+
+
+Data processing and making design data list
+```{r}
+
+## processing the encounter history
+giraffe_processed <- process.data(eh, model = "Multistrata", group = 'SEX', begin.time = 2005)
+
+## create design data list 
+giraffe_ddl <- make.design.data(giraffe_processed, parameters = list(S = list(pim.type = "time"), p = list(pim.type = "time"), Psi = list(pim.type = "constant")))
+
+```
+
+
+Fixing Psi (transition parameter) for parameters that can not transition from one to another:
+```{r}
+
+
+giraffe_ddl$Psi$fix <- NA
+
+## juvenile to adult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "1" & giraffe_ddl$Psi$tostratum == "3"] <- 0
+
+## subadult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "2" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to subadult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "2"] <- 0
+
+
+```
+
+
+
+Testing the effect of number of days from March to NOvember, where the maximum daily temperature was above 35°C, on survival. Temperature data were extracted for the Giraffe Zone which was taken from O'Conner et al 2019 (Conclusion of the preliminary testing: Among various temperature stress metrics tested, survival was most consistently and negatively associated with the number of days with the maximum temperature above 35 °C outside the cool season (DJF)).
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Load the temperature data
+TMaxDaily <- read.csv('./data/DailyMaxTemp_GZ_simple_05_18.csv')
+
+# Ensure date column is in proper Date format
+TMaxDaily <- TMaxDaily %>%
+  mutate(date = as.Date(date),
+         year = year(date),
+         month = month(date))
+
+
+```
+
+
+
+```{r}
+
+
+# Days with max temp ≥ 35°C, excluding Dec/Jan/Feb
+hot_35_no_djf <- TMaxDaily %>%
+  filter(max_temp_C >= 35, !month %in% c(12, 1, 2)) %>%
+  count(year, name = "hot_35_no_djf")
+
+
+# merge
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.numeric(as.character(time))) %>%
+  left_join(hot_35_no_djf, by = c("time" = "year")) %>%
+  mutate(time = as.factor(time))  # restore to factor for modeling
+
+
+# Calculate anomalies (z-scores)
+
+### We are calling this new covariate N_hot_days !!!
+
+hot_35_no_djf <- hot_35_no_djf %>%
+  mutate(
+    N_hot_days = scale(hot_35_no_djf)[, 1]
+  )
+
+
+# Merge with giraffe_ddl
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.numeric(as.character(time))) %>%  # Ensure numeric time for joining
+  left_join(hot_35_no_djf %>% select(year, N_hot_days),
+            by = c("time" = "year")) %>%
+  mutate(time = as.factor(time))  # Restore factor structure
+
+
+```
+
+
+
+```{r}
+
+
+giraffe_analysis <- function(){
+  
+   S.1 <- list(formula = ~ SEX)
+   
+   S.2 <- list(formula = ~ time+SEX)
+   S.3 <- list(formula = ~ N_hot_days+SEX)
+   
+   S.4 <- list(formula = ~ SEX+stratum)
+   
+   S.5 <- list(formula = ~ time+SEX+stratum)
+   S.6 <- list(formula = ~ N_hot_days+SEX+stratum)
+   
+   S.7 <- list(formula = ~ SEX*stratum)
+ 
+   S.8 <- list(formula = ~ SEX*stratum+time)
+   S.9 <- list(formula = ~ SEX*stratum+N_hot_days)
+
+   
+   
+   p.1 <- list(formula = ~ time+SEX)
+   p.2 <- list(formula = ~ time*stratum)
+   p.3 <- list(formula = ~ time+SEX+stratum)
+   p.4 <- list(formula = ~ SEX+stratum*time)
+
+  
+  Psi.1 <- list(forumla = ~ -1 + stratum:tostratum)
+  
+  model.list <- create.model.list("Multistrata")
+  
+  mark.wrapper(model.list, data = giraffe_processed, ddl = giraffe_ddl, useddl = TRUE)
+  
+}
+
+results_MSMR_N_hot_days_GZ_simple <- giraffe_analysis()
+
+```
+
+

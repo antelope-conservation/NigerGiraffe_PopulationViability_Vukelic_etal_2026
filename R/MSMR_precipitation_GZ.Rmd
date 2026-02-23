@@ -1,0 +1,245 @@
+---
+title: "Precip_GZ"
+author: "Mara Vukelić"
+date: "2025-06-05"
+output: html_document
+---
+
+
+#Doing multistate CMR analysis to see the effect of precipitation on survival of the West African giraffe population in the Giraffe Zone, Niger, 2005 - 2019
+
+To quantify daily precipitation within the giraffe zone (GZ), we used Google Earth Engine (GEE) to extract data from the Climate Hazards Group InfraRed Precipitation with Station (CHIRPS) dataset for our polygon (hereafter “GZ_simple”) representing the giraffe habitat area.
+
+The resulting time series of daily mean precipitation values was exported as a .CSV file via Google Drive and subsequently used for the analysis.
+
+
+```{r}
+
+rm(list = ls())
+
+```
+
+
+Loading libraries and encounter histories data for giraffe
+```{r}
+
+library(tidyverse)
+library(RMark)
+library(here)
+
+
+eh <- read.csv('./data/WA_giraffe_encounter_histories.csv', sep = ";", 
+               colClasses = c("character", "character"))
+
+```
+
+
+Data processing and making design data list
+```{r}
+
+## processing the encounter history
+giraffe_processed <- process.data(eh, model = "Multistrata", group = 'SEX', begin.time = 2005)
+
+## create design data list 
+giraffe_ddl <- make.design.data(giraffe_processed, parameters = list(S = list(pim.type = "time"), p = list(pim.type = "time"), Psi = list(pim.type = "constant")))
+
+```
+
+
+Fixing Psi (transition parameter) for parameters that can not transition from one to another:
+```{r}
+
+
+giraffe_ddl$Psi$fix <- NA
+
+## juvenile to adult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "1" & giraffe_ddl$Psi$tostratum == "3"] <- 0
+
+## subadult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "2" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to subadult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "2"] <- 0
+
+
+```
+
+
+
+GIRAFFE ZONE PRECIPITATION TESTING
+
+
+
+1. Testing effect of annual precipitation on survival - part of preliminary analysis, and to use precipitation data for JJA analysis
+
+```{r}
+
+
+
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+
+DP_GZS_05_18 <- read.csv('./data/DailyPrecip_GZ_simple_05_18.csv')
+#Daily precipitation in Giraffe zone simple from 2005 to 2018
+
+
+# Make sure date column is properly formatted
+DP_GZS_05_18 <- DP_GZS_05_18 %>%
+  mutate(date = ymd(date))
+
+# Step 3: Extract year and calculate total annual precipitation
+annual_precip <- DP_GZS_05_18 %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(annual_precip = sum(precip_mm, na.rm = TRUE))  
+
+# Step 4: Merge with capture-recapture dataset
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.numeric(as.character(time))) %>%   # Ensure year is numeric for joining
+  left_join(annual_precip, by = c("time" = "year")) %>% 
+  mutate(time = as.factor(time))  # Convert back to factor for model compatibility
+
+
+# Calculate mean and SD of annual precipitation across years
+mean_precip <- mean(annual_precip$annual_precip)
+sd_precip <- sd(annual_precip$annual_precip)
+
+# Calculate standardised anomalies (z-scores), but call it precip_anomaly
+annual_precip <- annual_precip %>%
+  mutate(precip_anomaly = (annual_precip - mean_precip) / sd_precip)
+
+# Join with giraffe_ddl survival data
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.numeric(as.character(time))) %>%
+  left_join(annual_precip %>% select(year, precip_anomaly), by = c("time" = "year")) %>%
+  mutate(time = as.factor(time))
+
+# Check results
+head(annual_precip)
+head(giraffe_ddl$S)
+
+```
+
+
+Testing models
+```{r}
+
+giraffe_analysis <- function(){
+  
+   S.1 <- list(formula = ~ SEX)
+   
+   S.2 <- list(formula = ~ time+SEX)
+   S.3 <- list(formula = ~ precip_anomaly+SEX)
+   
+   S.4 <- list(formula = ~ SEX+stratum)
+   
+   S.5 <- list(formula = ~ time+SEX+stratum)
+   S.6 <- list(formula = ~ precip_anomaly+SEX+stratum)
+   
+   S.7 <- list(formula = ~ SEX*stratum)
+   
+   S.8 <- list(formula = ~ SEX*stratum+time)
+   S.9 <- list(formula = ~ SEX*stratum+precip_anomaly)
+
+
+   
+   p.1 <- list(formula = ~ time+SEX)
+   p.2 <- list(formula = ~ time*stratum)
+   p.3 <- list(formula = ~ time+SEX+stratum)
+   p.4 <- list(formula = ~ SEX+stratum*time)
+
+  
+  Psi.1 <- list(forumla = ~ -1 + stratum:tostratum)
+  
+  model.list <- create.model.list("Multistrata")
+  
+  mark.wrapper(model.list, data = giraffe_processed, ddl = giraffe_ddl, useddl = TRUE)
+  
+}
+
+results_MSMR_year_precip_anom_GZ <- giraffe_analysis()
+
+```
+
+
+
+2. Testing effect of JJA precipitation on survival
+
+```{r}
+
+# Filter for months June, July, August and sum precipitation, raw values are called precip_JJA
+precip_JJA <- DP_GZS_05_18 %>%
+  mutate(year = year(date), month = month(date)) %>%
+  filter(month %in% c(6, 7, 8)) %>%
+  group_by(year) %>%
+  summarise(JJA_precip_raw = sum(precip_mm, na.rm = TRUE)) %>%
+  ungroup()
+
+# Calculate mean and SD for anomaly and percentile
+mean_JJA <- mean(precip_JJA$JJA_precip_raw)
+sd_JJA <- sd(precip_JJA$JJA_precip_raw)
+quantile <- quantile(precip_JJA$JJA_precip_raw, probs = c(0.10, 0.90), na.rm = TRUE)
+
+# Compute standardized anomaly
+
+## anomaly value is called just JJA_precip !!!!
+
+precip_JJA <- precip_JJA %>%
+  mutate(JJA_precip = (JJA_precip_raw - mean_JJA) / sd_JJA)
+
+# Merge with giraffe_ddl$S
+precip_JJA <- precip_JJA %>%
+  mutate(year = as.character(year))
+
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.character(time)) %>%
+  left_join(precip_JJA, by = c("time" = "year")) %>%
+  mutate(time = as.factor(time))
+
+```
+
+
+Testing models
+```{r}
+
+giraffe_analysis <- function(){
+  
+   S.1 <- list(formula = ~ SEX)
+   
+   S.2 <- list(formula = ~ time+SEX)
+   S.3 <- list(formula = ~ JJA_precip+SEX)
+   
+   S.4 <- list(formula = ~ SEX+stratum)
+   
+   S.5 <- list(formula = ~ time+SEX+stratum)
+   S.6 <- list(formula = ~ JJA_precip+SEX+stratum)
+   
+   S.7 <- list(formula = ~ SEX*stratum)
+   
+   S.8 <- list(formula = ~ SEX*stratum+time)
+   S.9 <- list(formula = ~ SEX*stratum+JJA_precip)
+
+
+   
+   p.1 <- list(formula = ~ time+SEX)
+   p.2 <- list(formula = ~ time*stratum)
+   p.3 <- list(formula = ~ time+SEX+stratum)
+   p.4 <- list(formula = ~ SEX+stratum*time)
+
+  
+  Psi.1 <- list(forumla = ~ -1 + stratum:tostratum)
+  
+  model.list <- create.model.list("Multistrata")
+  
+  mark.wrapper(model.list, data = giraffe_processed, ddl = giraffe_ddl, useddl = TRUE)
+  
+}
+
+results_MSMR_precip_anom_JJA_GZ <- giraffe_analysis()
+
+```

@@ -1,0 +1,161 @@
+---
+title: "GOF_MSMR_precipitation"
+author: "Mara Vukelić"
+date: "2025-09-16"
+output: html_document
+---
+
+
+```{r}
+
+rm(list = ls())
+
+```
+
+
+Loading libraries and encounter histories data - GIRAFFE DATA
+```{r}
+
+library(tidyverse)
+library(RMark)
+library(here)
+
+
+
+#install.packages('RMark')
+eh <- read.csv('./data/WA_giraffe_encounter_histories.csv', sep = ";", 
+               colClasses = c("character", "character"))
+
+```
+
+
+Data processing and making design data list
+```{r}
+
+## processing the encounter history
+giraffe_processed <- process.data(eh, model = "Multistrata", group = 'SEX', begin.time = 2005)
+
+## create design data list 
+giraffe_ddl <- make.design.data(giraffe_processed, parameters = list(S = list(pim.type = "time"), p = list(pim.type = "time"), Psi = list(pim.type = "constant")))
+
+```
+
+
+Fixing Psi (transition parameter) for parameters that can not transition from one to another:
+```{r}
+
+giraffe_ddl$Psi$fix <- NA
+
+## juvenile to adult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "1" & giraffe_ddl$Psi$tostratum == "3"] <- 0
+
+## subadult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "2" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to juvenile
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "1"] <- 0
+
+## adult to subadult
+giraffe_ddl$Psi$fix[giraffe_ddl$Psi$stratum == "3" & giraffe_ddl$Psi$tostratum == "2"] <- 0
+
+
+```
+
+
+INTRODUCING PRECIPITATION DATA
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+
+DP_GZS_05_18 <- read.csv('./data/DailyPrecip_GZ_simple_05_18.csv')
+#Daily precipitation in Giraffe zone simple from 2005 to 2018
+
+
+# Make sure date column is properly formatted
+DP_GZS_05_18 <- DP_GZS_05_18 %>%
+  mutate(date = ymd(date))  # replace `date` with your actual column name if needed
+
+# Extract year and calculate total annual precipitation
+annual_precip <- DP_GZS_05_18 %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(annual_precip = sum(precip_mm, na.rm = TRUE))  
+
+# Merge with capture-recapture dataset
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.numeric(as.character(time))) %>%   # Ensure year is numeric for joining
+  left_join(annual_precip, by = c("time" = "year")) %>% 
+  mutate(time = as.factor(time))  # Convert back to factor for model compatibility
+
+
+# Filter for months June, July, August and sum precipitation, raw values are called precip_JJA
+precip_JJA <- DP_GZS_05_18 %>%
+  mutate(year = year(date), month = month(date)) %>%
+  filter(month %in% c(6, 7, 8)) %>%
+  group_by(year) %>%
+  summarise(JJA_precip_raw = sum(precip_mm, na.rm = TRUE)) %>%
+  ungroup()
+
+# Calculate mean and SD for anomaly and percentile
+mean_JJA <- mean(precip_JJA$JJA_precip_raw)
+sd_JJA <- sd(precip_JJA$JJA_precip_raw)
+quantile <- quantile(precip_JJA$JJA_precip_raw, probs = c(0.10, 0.90), na.rm = TRUE)
+
+# Compute standardized anomaly
+
+## anomaly value is called just JJA_precip !!
+
+precip_JJA <- precip_JJA %>%
+  mutate(JJA_precip = (JJA_precip_raw - mean_JJA) / sd_JJA)
+
+# Merge with giraffe_ddl$S
+precip_JJA <- precip_JJA %>%
+  mutate(year = as.character(year))
+
+giraffe_ddl$S <- giraffe_ddl$S %>%
+  mutate(time = as.character(time)) %>%
+  left_join(precip_JJA, by = c("time" = "year")) %>%
+  mutate(time = as.factor(time))
+
+
+
+```
+
+
+MAKING THE MODEL
+```{r}
+
+## define parameters
+
+S.time <- list(formula = ~SEX*stratum+JJA_precip)
+p.time <- list(formula = ~SEX+stratum*time)
+Psi <- list(formula = ~ -1 + stratum:tostratum) 
+
+
+## make model
+model_saturated <- make.mark.model(data = giraffe_processed, 
+                           ddl = giraffe_ddl,
+                           parameters = list(S = S.time,
+                                             p = p.time,
+                                             Psi = Psi),
+                           model.name = "Giraffe_saturated",
+                           useddl = TRUE)
+
+## run the model
+model_saturated <- run.mark.model(model = model_saturated,
+                                 filename = "testmark",
+                                 prefix = "testmark")
+
+
+```
+
+
+FOR MARK
+```{r}
+
+export.MARK(x = giraffe_processed, project.name = 'giraffe_precipitation_MS_GOF', 
+            model = model_saturated, replace = TRUE)
+
+```
