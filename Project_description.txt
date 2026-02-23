@@ -1,0 +1,35 @@
+Scripts: 
+
+MSMR_temperature_GZ - Used to perform multistate mark-recapture (MSMR) analysis with temperature as a covariate (temperature is expressed as the number of days with maximum daily temperature equal or above 35°C).
+
+GOF_MSMR_temperature - Used to create and export saturated global MSMR model with temperature as a covariate for the goodness of fit  analysis.
+
+MSMR_precipitation_GZ - Used to perform multistate mark-recapture (MSMR) analysis with precipitation as a covariate (precipitation is expressed as total precipitation in months of June, July and August, JJA precipitation, in mm).
+
+GOF_MSMR_precipitation - Used to create and export saturated global MSMR model with precipitation as a covariate for the goodness of fit  analysis.
+
+
+
+
+Datasets:
+
+WA_giraffe_encounter_histories - used in all scripts
+                               - contains 2 columns, sex and capture history between 2005 and 2019
+                               - SEX: 	1 = males,	0 = females
+                               - ch:	1 = juvenile,	2 = subadult,	3 = adult
+
+
+DailyMaxTemp_GZ_simple_05_18 - used in scripts 'MSMR_temperature_GZ' and 'GOF_MSMR_temperature'
+			     - contains maximum daily temperature in °C from 1.1.2025. until 31.12.2018.
+
+
+
+DailyPrecip_GZ_simple_05_18 - used in scripts 'MSMR_precipitation_GZ' and 'GOF_MSMR_precipitation'
+			    - contains daily precipitation im mm from 1.1.2025. until 31.12.2018.
+
+
+	       
+
+
+
+
