@@ -78,6 +78,9 @@ The Giraffe Zone habitat polygon was digitised from:
 ---
 
 Copernicus Climate Change Service (C3S), 2017. ERA5: Fifth generation of ECMWF atmospheric reanalyses of the global climate. Copernicus Climate Change Service Climate Data Store (CDS). Available from: https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels (accessed 10th July 2025).
+
 Funk, C., Peterson, P., Landsfeld, M., Pedreros, D., Verdin, J., Shukla, S., Husak, G., Rowland, J., Harrison, L., Hoell, A., Michaelsen, J., 2015. The climate hazards infrared precipitation with stations—A new environmental record for monitoring extremes. Sci. Data 2, 150066. https://doi.org/10.1038/sdata.2015.66.
+
 Gorelick, N., Hancher, M., Dixon, M., Ilyushchenko, S., Thau, D., Moore, R., 2017. Google Earth Engine: Planetary-scale geospatial analysis for everyone. Remote Sens. Environ. 202, 18–27. https://doi.org/10.1016/j.rse.2017.06.031.
+
 O’Connor, D., Stacy-Dawes, J., Muneza, A., Fennessy, J., Gobush, K., Chase, M.J., Brown, M.B., Bracis, C., Elkan, P., Zabeirou, A.R.M., Rabeil, T., Rubenstein, D., Becker, M.S., Phillips, S., Stabach, J.A., Leimgruber, P., Glikman, J.A., Ruppert, K., Masiaine, S., Mueller, T., 2019. Updated geographic range maps for giraffe, Giraffa spp., throughout sub-Saharan Africa, and implications of changing distributions for conservation. Mamm. Rev. 49, 285–299. https://doi.org/10.1111/mam.12165.
