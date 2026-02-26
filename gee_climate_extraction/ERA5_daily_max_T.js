@@ -1,20 +1,7 @@
-// MAXIMUM DAILY TEMPERATURE //
-// === 1. Load polygon (USER MUST SUPPLY) ===
-// NOTE: For reproducibility, provide the same habitat polygon used in the study.
-// If a public polygon is available, upload it to your GEE Assets and load it here.
-// Example (replace with your own asset):
-// var GZ_simple = ee.FeatureCollection('your_path/GZ_simple');
-
-var GZ_simple = ee.FeatureCollection('your_path/GZ_simple'); // <-- replace
-
-//or
-
-//
 // === Load habitat polygon ===
 // 1) Download the GeoJSON from the repository: spatial_data_for_gee/GZ_simple.geojson
 // 2) Upload it to your Google Earth Engine Assets
 // 3) Replace 'your_path/GZ_simple'
-//
 
 var GZ_simple = ee.FeatureCollection('your_path/GZ_simple'); // <- replace
 
