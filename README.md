@@ -5,52 +5,60 @@ This repository contains supporting data and R scripts for the capture-mark-reca
 
 ---
 
-### 📂 R/
+### 📂 R
+Contains R scripts.
 
-R scripts used for multistate mark–recapture (MSMR) analyses and goodness-of-fit assessment.
+- **MSMR_temperature_GZ**  
+  Used to perform multistate mark–recapture (MSMR) analysis with temperature as a covariate  
+  (temperature is expressed as the number of days with maximum daily temperature equal or above 35 °C, excluding December–February period).
 
-- **MSMR_temperature_GZ.R**  
-  Performs MSMR analysis with temperature as a covariate  
-  (number of days with maximum daily temperature ≥ 35 °C, excluding December–February).
+- **GOF_MSMR_temperature**  
+  Used to create and export saturated global MSMR model with temperature as a covariate for goodness-of-fit analysis.
 
-- **GOF_MSMR_temperature.R**  
-  Fits and exports a saturated global MSMR model for goodness-of-fit evaluation.
+- **MSMR_precipitation_GZ**  
+  Used to perform multistate mark–recapture (MSMR) analysis with precipitation as a covariate  
+  (precipitation is expressed as total precipitation in months of June, July and August, JJA precipitation, in mm).
 
-- **MSMR_precipitation_GZ.R**  
-  Performs MSMR analysis with precipitation as a covariate  
-  (total June–July–August precipitation, mm).
-
-- **GOF_MSMR_precipitation.R**  
-  Fits and exports a saturated global MSMR model for goodness-of-fit evaluation.
-
----
-
-### 📂 data_for_R/
-
-Input data used in the R analyses.
-
-- **DailyMaxTemp_GZ_simple_05_18.csv**  
-  Daily maximum temperature (°C), 1 January 2005 – 31 December 2018.
-
-- **DailyPrecip_GZ_simple_05_18.csv**  
-  Daily precipitation (mm), 1 January 2005 – 31 December 2018.
-
-- **WA_giraffe_encounter_histories.csv**  
-  Encounter histories are not publicly available due to data governance arrangements and the conservation status of the West African giraffe.  
-  Access may be granted upon reasonable request and subject to an appropriate Data Sharing Agreement.
+- **GOF_MSMR_precipitation**  
+  Used to create and export saturated global MSMR model with precipitation as a covariate for goodness-of-fit analysis.
 
 ---
 
-### 📂 gee_climate_extraction/
+### 📂 data_for_R
+Contains `.csv` files used in R analysis.
 
-Google Earth Engine (GEE) scripts used to derive climate covariates.
+- **WA_giraffe_encounter_histories**  
+  Encounter histories used in the MSMR analyses are not included in this repository due to data governance arrangements and the conservation status of the West African giraffe.  
+  The dataset is collectively owned by the responsible Nigerien authorities and collaborating NGOs.  
+  Access may be granted upon reasonable request and subject to an appropriate Data Sharing Agreement with the responsible institutions.  
+  To request the data, contact the corresponding author.
 
-- **ERA5_daily_max_T.js**
-- **CHIRPS_daily_precipitation.js**
+- **DailyMaxTemp_GZ_simple_05_18**  
+  Used in scripts `MSMR_temperature_GZ` and `GOF_MSMR_temperature`.  
+  Contains 2 columns with date and temperature; maximum daily temperature in °C from 1 January 2005 until 31 December 2018.
+
+- **DailyPrecip_GZ_simple_05_18**  
+  Used in scripts `MSMR_precipitation_GZ` and `GOF_MSMR_precipitation`.  
+  Contains 2 columns with date and precipitation; daily precipitation in mm from 1 January 2005 until 31 December 2018.
 
 ---
 
-### 📂 spatial_data_for_gee/
+### 📂 gee_climate_extraction
+Contains `.js` files for temperature and precipitation data extraction.
 
-- **GZ_simple.geojson**  
-  Habitat polygon used for climate extraction in GEE.
+- **ERA5_daily_max_T.js**  
+  Extracts daily maximum 2 m air temperature (°C) from the ERA5 reanalysis dataset (ECMWF/ERA5/DAILY) for the defined giraffe habitat polygon from 1 January 2005 to 31 December 2018.  
+  It requires uploading polygon `GZ_simple` as an asset in Google Earth Engine.  
+  The `GZ_simple` polygon can be found in the folder `spatial_data_for_gee` as a `.geojson` file.
+
+- **CHIRPS_daily_precipitation.js**  
+  Extracts daily precipitation (mm) from the CHIRPS dataset (UCSB-CHG/CHIRPS/DAILY) for the same polygon and time period.
+
+---
+
+### 📂 spatial_data_for_gee
+Contains `.geojson` file.
+
+- **GZ_simple**  
+  Used in Google Earth Engine to extract the climate data for the Giraffe Zone.  
+  Data can be extracted using the code found in folder `gee_climate_extraction`.
