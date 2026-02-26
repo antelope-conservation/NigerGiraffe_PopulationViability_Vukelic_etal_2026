@@ -11,9 +11,9 @@ var GZ_simple = ee.FeatureCollection('users/REPLACE_WITH_YOUR_ASSET/GZ_simple');
 
 //
 // === Load habitat polygon ===
-// 1) Download the GeoJSON from the repository: spatial_data/Giraffe_Zone_Polygon_OConnor2019_digitised.geojson
+// 1) Download the GeoJSON from the repository: spatial_data_for_gee/GZ_simple.geojson
 // 2) Upload it to your Google Earth Engine Assets
-// 3) Replace 'users/YOUR_USERNAME/Giraffe_Zone_Polygon_OConnor2019_digitised'
+// 3) Replace 'users/YOUR_USERNAME/GZ_simple'
 //
 
 var GZ_simple = ee.FeatureCollection('users/YOUR_USERNAME/Giraffe_Zone_Polygon_OConnor2019_digitised');
