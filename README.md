@@ -1,4 +1,4 @@
-# VukelicEtAl2026_NigerGiraffeCMR_TempAndPrecip
+# VukelicEtAl2026_NigerGiraffe_MSMR_Climate
 This repository contains supporting data and R scripts for the capture-mark-recapture (CMR) analyses used to assess the effects of temperature and precipitation on apparent survival of the West African giraffe in the Giraffe Zone (2005–2018), implemented using multistate mark-recapture (MSMR) models. It also includes the Google Earth Engine (GEE) scripts used to extract the climate covariates and the digitised habitat polygon (GeoJSON; derived from O’Connor et al., 2019) required to reproduce the climate data extraction workflow.
 
 ## Repository Structure
