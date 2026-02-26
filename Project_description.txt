@@ -27,8 +27,25 @@ DailyPrecip_GZ_simple_05_18 - used in scripts 'MSMR_precipitation_GZ' and 'GOF_M
 
 
 
+Folder: gee_climate_extraction
+- contains .js files for temperature and precipitation data extraction
+
+ERA5_daily_max_T.js
+Extracts daily maximum 2 m air temperature (°C) from the ERA5 reanalysis dataset (ECMWF/ERA5/DAILY) for the defined giraffe habitat polygon from 1 January 2005 to 31 December 2018. 
+
+CHIRPS_daily_precipitation.js
+Extracts daily precipitation (mm) from the CHIRPS dataset (UCSB-CHG/CHIRPS/DAILY) for the same polygon and time period.
+
+Users must supply the habitat polygon in Google Earth Engine to reproduce the extraction step.
+
+
+
+
+
+
 
 	       
+
 
 
 
