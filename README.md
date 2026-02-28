@@ -50,10 +50,10 @@ Contains `.csv` files used in R analysis.
 ---
 
 ### 📂 gee_climate_extraction
-Contains `.js` files for temperature and precipitation data extraction.
+Contains `.js` files for temperature and precipitation data extraction from Google Earth Engine Code Editor
 
 - **ERA5_daily_max_T.js**  
-  Extracts daily maximum 2 m air temperature (°C) from the ERA5 reanalysis dataset (ECMWF/ERA5/DAILY) for the defined giraffe habitat polygon from 1 January 2005 to 31 December 2018.  
+  Extracts daily maximum 2 m air temperature (°C) from the ERA5 reanalysis dataset (ECMWF/ERA5/DAILY) for the defined giraffe habitat polygon  from 1 January 2005 to 31 December 2018.  
   It requires uploading polygon `GZ_simple` as an asset in Google Earth Engine.  
   The `GZ_simple` polygon can be found in the folder `spatial_data_for_gee` as a `.geojson` file.
 
