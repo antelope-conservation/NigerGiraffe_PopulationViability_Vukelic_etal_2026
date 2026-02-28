@@ -73,12 +73,12 @@ Contains `.geojson` file.
 
   ## Data Sources
 
-Climate data were accessed via the Google Earth Engine (GEE) Data Catalog (Gorelick et al., 2017).
+Climate data were accessed via the Google Earth Engine (GEE) Data Catalog and extracted using the GEE Code Editor (Gorelick et al., 2017).
 
 - ERA5 daily reanalysis data (ECMWF/ERA5/DAILY; Copernicus Climate Change Service (C3S), 2017)
 - CHIRPS daily precipitation data (UCSB-CHG/CHIRPS/DAILY; Funk et al., 2015)
 
-The Giraffe Zone habitat polygon was digitised from:
+The Giraffe Zone habitat polygon (GZ_simple.geojson) was digitised from:
 - O’Connor et al. (2019)
 
 ---
